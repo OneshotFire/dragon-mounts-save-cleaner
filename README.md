@@ -10,7 +10,7 @@ The page is static HTML, CSS and JavaScript. There are no dependencies, accounts
 2. Choose the affected character `.json` and review every proposed change.
 3. Download the cleaned copy. To install it yourself, replace the affected save using its original filename.
 
-The Windows character folder is `%LOCALAPPDATA%\RSDragonwilds\Saved\SaveCharacters`. In Wine, use the wrapper's corresponding Windows user folder. World `.sav` files are unsupported.
+World `.sav` files are unsupported.
 
 Cleaning removes Dragon Mounts quest progress, dragon unlocks, custom items and associated records. It cannot reconstruct missing or truncated data, and is not an automatic multiplayer compatibility layer. A successful JSON check does not prove that a particular file will load in-game.
 

@@ -5,9 +5,9 @@ let generation = 0;
 let current;
 $('version').textContent = `v${RULES_VERSION}`;
 
-function status(message, error = false) {
+function status(message, error = false, quiet = false) {
   $('status').textContent = message;
-  $('status').className = error ? 'error' : '';
+  $('status').className = error ? 'error' : quiet ? 'sr-only' : '';
   $('status').hidden = !message;
 }
 function reset() {
@@ -64,28 +64,36 @@ async function choose(files) {
     $('file-name').textContent = `${file.name} · ${(file.size / 1024).toFixed(1)} KiB`;
     const count = result.changes.length;
     $('results-title').textContent = count ? `${count} Dragon Mounts ${count === 1 ? 'entry' : 'entries'} found` : 'No known Dragon Mounts entries found';
-    $('result-description').textContent = count
-      ? 'Review the entries below. The cleaned copy removes these entries and clears an equipped dragon, if present.'
-      : 'No changes are needed for the supported cleanup rules. Your file has been left exactly as it was.';
-    $('verified').textContent = 'JSON validated. Every retained save value is unchanged.';
+    $('result-description').textContent = 'Nothing to clean. Your save is unchanged.';
+    $('result-description').hidden = !!count;
+    $('verified').textContent = 'All other save data is unchanged.';
+    $('verified').hidden = !count;
     $('change-details').hidden = !count;
-    $('changes-summary').textContent = `Review all ${count} proposed changes`;
+    $('changes-summary').textContent = 'View changes';
     const fragment = document.createDocumentFragment();
+    const groups = new Map();
     for (const change of result.changes) {
+      if (!groups.has(change.category)) groups.set(change.category, []);
+      groups.get(change.category).push(change);
+    }
+    for (const [category, changes] of groups) {
       const li = document.createElement('li');
       const title = document.createElement('span');
       title.className = 'change-title';
-      title.textContent = `${change.category}: ${change.label}`;
-      const path = document.createElement('span');
-      path.className = 'change-path'; path.textContent = change.path;
-      const id = document.createElement('span');
-      id.className = 'change-id'; id.textContent = change.id;
-      li.append(title, path, id); fragment.append(li);
+      title.textContent = category;
+      const detail = document.createElement('span');
+      detail.className = 'change-detail';
+      detail.textContent = category === 'Quests' ? changes.map(c => c.label).join(', ')
+        : category === 'Dragon unlocks' ? changes.map(c => c.id.match(/_(Green|Blue|Red|Black)Dragon$/)[1] + ' Dragon').join(', ')
+        : category === 'Equipped dragon' ? 'Cleared'
+        : category === 'Tracked quest' ? 'Cleared'
+        : `${changes.length} ${changes.length === 1 ? 'entry' : 'entries'}`;
+      li.append(title, detail); fragment.append(li);
     }
     $('changes-list').replaceChildren(fragment);
     $('downloads').hidden = !count;
     $('results').hidden = false;
-    status(count ? 'Save checked. A cleaned copy is ready to download.' : 'Save checked. No changes needed.');
+    status(count ? 'Save checked. A cleaned copy is ready to download.' : 'Save checked. No changes needed.', false, true);
   } catch (error) {
     if (mine !== generation) return;
     current = undefined;
